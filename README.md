@@ -43,3 +43,5 @@ The site is served at **https://jdgaskinsconstruction.com**. The address is set 
 ## What Google sees
 
 Every page has its own title, description, canonical and social tags; `/sitemap.xml` and `/robots.txt`; the thank-you and 404 pages are `noindex`. Structured data (JSON-LD) holds only facts in `client/brand.mjs`: no hours, prices, ratings or review markup unless the business supplied them. Audit it any time: `npm run contracting -- audit https://jdgaskinsconstruction.com` in swwd-site-builder.
+
+Proof run: this commit exists to trigger the first Workers Builds build.
