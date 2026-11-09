@@ -1,0 +1,174 @@
+---
+// Home: a photo hero, the sectors served (overlapping the hero), who we are with the facts we have, how we can help,
+// a strip of work photos, what customers say, a closing call to action.
+import Cta from '../components/Cta.astro';
+import { brand, BASE } from '../../../brand';
+import { img, imgSet, alt, bankPhotos } from '../../../assets';
+const h = brand.hero;
+const help = brand.help;
+// Work strip: up to two photos per sector, using the photos the client chose for that sector's page (`stripPhotos`), or else the first photos of its
+// folder. Never a sector card's own photo, so nothing on this page appears twice.
+const notCard = (s: any) => (p: any) => !(Array.isArray(s.image) && p[0] === s.image[0] && p[1] === s.image[1]);
+const strip = brand.sectors.flatMap((s: any) => (s.stripPhotos ?? (s.workBank ? bankPhotos(s.workBank, 3).filter(notCard(s)) : [])).slice(0, 2));
+const hero = await imgSet(h.image ?? ['hero-wide', 1], [640, 960, 1280, 1920]);
+const cardImgs = await Promise.all(brand.sectors.map((s: any) => imgSet(s.image, [480, 720, 960])));
+const stripImgs = await Promise.all(strip.map((p: any) => imgSet(p, [320, 480, 720])));
+---
+
+<section class="hero">
+  <img class="bg" src={hero.src} srcset={hero.srcset} sizes="100vw" width={hero.width} height={hero.height} alt="" fetchpriority="high" decoding="async" />
+  <div class="shade"></div>
+  <div class="container copy">
+    <span class="topper">{h.topper}</span>
+    <h1>{h.headline}</h1>
+    <p class="lead">{h.lead}</p>
+    <div class="actions">
+      <a class="btn btn--cta" href={`${BASE}/contact/`}>{brand.quoteLabel}</a>
+      <a class="btn btn--outline-light" href={brand.contact.phoneHref}>Call {brand.contact.phone}</a>
+    </div>
+  </div>
+</section>
+
+<section class="sectors">
+  <div class="container grid" style={`--n:${brand.sectors.length};--n2:${brand.sectors.length === 4 ? 2 : brand.sectors.length}`}>
+    {brand.sectors.map((s: any, i: number) => (
+      <a class="card" href={`${BASE}/${s.slug}/`}>
+        <img src={cardImgs[i].src} srcset={cardImgs[i].srcset} sizes="(min-width: 64rem) 300px, (min-width: 48rem) 48vw, 100vw" width={cardImgs[i].width} height={cardImgs[i].height} alt={alt(s.image, s.imageAlt)} loading="lazy" decoding="async" />
+        <div class="card-body">
+          <h2>{s.title}</h2>
+          <p>{s.summary}</p>
+          <span class="more">Explore {s.title.toLowerCase()} →</span>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<section class="section section--white who">
+  <div class="container two">
+    <div>
+      <span class="topper">{brand.headings.story.topper}</span>
+      <h2 class="title">{brand.whoTitle}</h2>
+      {brand.whoText.map((p: string) => <p class="lead">{p}</p>)}
+    </div>
+    {brand.stats.length > 0 && (
+      <ul class="stats">
+        {brand.stats.map((s: any) => <li><b>{s.value}</b><span>{s.label}</span></li>)}
+      </ul>
+    )}
+  </div>
+</section>
+
+{help && (
+  <section class="section section--sand">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">{help.topper}</span>
+        <h2 class="title">{help.title}</h2>
+        {help.lead && <p class="lead">{help.lead}</p>}
+      </div>
+      <ul class="help">
+        {help.items.map((i: any, n: number) => <li><span class="num">{String(n + 1).padStart(2, '0')}</span><h3>{i.title}</h3><p>{i.text}</p></li>)}
+      </ul>
+    </div>
+  </section>
+)}
+
+{strip.length > 0 && (
+  <section class="section section--white work">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">{brand.headings.gallery.topper}</span>
+        <h2 class="title">{brand.headings.gallery.title}</h2>
+      </div>
+      <div class="strip" style={`--sc-t:${strip.length % 4 === 0 ? 4 : 3};--sc-d:${strip.length % 6 === 0 ? 6 : strip.length % 4 === 0 ? 4 : 6}`}>
+        {strip.map((p: any, i: number) => <img src={stripImgs[i].src} srcset={stripImgs[i].srcset} sizes="(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 48vw" width={stripImgs[i].width} height={stripImgs[i].height} alt={alt(p)} loading="lazy" decoding="async" />)}
+      </div>
+      {brand.photoPage && <p class="seemore"><a class="btn btn--primary" href={`${BASE}/gallery/`}>See more of our work</a></p>}
+    </div>
+  </section>
+)}
+
+{brand.praise.length > 0 && (
+  <section class="section section--dark praise">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">{brand.headings.praise.topper}</span>
+        <h2 class="title">{brand.headings.praise.title}</h2>
+      </div>
+      <ul class="quotes">
+        {brand.praise.map((q: any) => (
+          <li><h3>{q.title}</h3><p>“{q.text}”</p><span>{q.by ?? 'Customer review'}</span></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}
+
+{brand.ways && (
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">{brand.ways.topper}</span>
+        <h2 class="title">{brand.ways.title}</h2>
+        {brand.ways.lead && <p class="lead">{brand.ways.lead}</p>}
+      </div>
+      <ul class="help ways">
+        {brand.ways.items.map((i: any, n: number) => <li><span class="num">{String(n + 1).padStart(2, '0')}</span><h3>{i.title}</h3><p>{i.text}</p></li>)}
+      </ul>
+    </div>
+  </section>
+)}
+
+<Cta />
+
+<style>
+  .hero { position: relative; overflow: hidden; color: #fff; padding: clamp(4rem, 11vw, 8rem) 1rem clamp(7rem, 14vw, 10.5rem); }
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .shade { position: absolute; inset: 0; background: linear-gradient(100deg, rgba(8, 20, 44, 0.93) 0%, rgba(8, 20, 44, 0.78) 48%, rgba(8, 20, 44, 0.45) 100%); }
+  .copy { position: relative; }
+  .hero h1 { color: #fff; font-size: clamp(2.1rem, 5.4vw, 3.9rem); font-weight: 800; letter-spacing: 0.01em; max-width: 46rem; margin-bottom: 1rem; }
+  .hero .lead { color: #dbe2ef; max-width: 40rem; margin-bottom: 1.75rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+
+  .sectors { padding: 0 1rem; margin-top: calc(-1 * clamp(4rem, 8vw, 6rem)); position: relative; z-index: 2; }
+  .grid { display: grid; gap: 1.25rem; }
+  .card { display: flex; flex-direction: column; background: #fff; border-radius: var(--radius); overflow: hidden; text-decoration: none; box-shadow: var(--shadow); border-bottom: 5px solid var(--accent); transition: transform 0.15s, box-shadow 0.15s; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 22px 40px -16px rgba(10, 22, 48, 0.4); }
+  .card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+  .card-body { padding: 1.4rem 1.5rem 1.6rem; display: flex; flex-direction: column; flex: 1; }
+  .card h2 { font-size: 1.3rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  .card p { flex: 1; margin-bottom: 1rem; }
+  .more { font-family: var(--font-head); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+
+  .who .lead { max-width: none; }
+  .two { display: grid; gap: 2.5rem; align-items: center; }
+  .stats { display: grid; gap: 1rem; }
+  .stats li { display: grid; gap: 0.2rem; padding: 1.2rem 1.4rem; background: var(--bg); border-left: 5px solid var(--accent); border-radius: var(--radius); }
+  .stats b { font-family: var(--font-head); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; color: var(--primary); letter-spacing: 0.02em; }
+
+  .help { display: grid; gap: 1.25rem; }
+  .ways li { background: var(--bg); }
+  .help li { background: #fff; border-radius: var(--radius); padding: 1.6rem 1.5rem; border-top: 4px solid var(--primary); }
+  .num { font-family: var(--font-head); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.12em; color: var(--accent); }
+  .help h3 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin: 0.4rem 0 0.5rem; }
+  .help p { margin: 0; }
+
+  .strip { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .strip img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); }
+  .seemore { margin: 1.75rem 0 0; }
+
+  .quotes { display: grid; gap: 1.5rem; }
+  .quotes li { padding: 1.5rem 0 0; border-top: 3px solid var(--cta-on-dark); }
+  .quotes h3 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #fff; }
+  .quotes p { font-size: 1.1rem; color: #dbe2ef; margin-bottom: 0.6rem; }
+  .quotes span { font-size: 0.9rem; color: var(--cta-on-dark); font-weight: 600; }
+
+  @media (min-width: 48rem) {
+    .grid { grid-template-columns: repeat(var(--n2, 3), 1fr); gap: 1.5rem; }
+    .help { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .strip { grid-template-columns: repeat(var(--sc-t, 3), 1fr); gap: 0.9rem; }
+    .quotes { grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+  }
+  @media (min-width: 64rem) { .two { grid-template-columns: 1.3fr 1fr; gap: 4.5rem; } .grid { grid-template-columns: repeat(var(--n, 3), 1fr); } .strip { grid-template-columns: repeat(var(--sc-d, 6), 1fr); } .strip img { aspect-ratio: 1; } }
+</style>

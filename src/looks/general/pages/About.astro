@@ -1,0 +1,65 @@
+---
+// About: the story in plain paragraphs beside the company logo (and a portrait of the owner when the client has one),
+// then the sectors, then a closing call to action.
+import PageHead from '../components/PageHead.astro';
+import Cta from '../components/Cta.astro';
+import { brand, BASE } from '../../../brand';
+import { maybeImg, img, alt } from '../../../assets';
+const logo = maybeImg(['logo', 1]);
+const owner = brand.owner?.photo ? maybeImg(brand.owner.photo) : null;
+---
+
+<PageHead title="About us" crumb={brand.headings.story.topper} text={brand.intro.about} />
+
+<section class="section section--white">
+  <div class="container two">
+    <div class="story">
+      {brand.about.story.map((p: string) => <p>{p}</p>)}
+    </div>
+    <aside class="side">
+      {logo && <img class="logo-card" src={logo} alt={`${brand.name} logo`} />}
+      {owner && (
+        <figure class="owner">
+          <img src={owner} alt={alt(brand.owner.photo, brand.owner.alt)} />
+          <figcaption><b>{brand.owner.name}</b>{brand.owner.role && <span>{brand.owner.role}</span>}</figcaption>
+        </figure>
+      )}
+    </aside>
+  </div>
+</section>
+
+{brand.sectors.length > 0 && (
+  <section class="section section--sand">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">What we build</span>
+        <h2 class="title">{brand.about.sectorsTitle ?? 'Three kinds of work'}</h2>
+      </div>
+      <ul class="cards">
+        {brand.sectors.map((s: any) => (
+          <li><a href={`${BASE}/${s.slug}/`}><h3>{s.title}</h3><p>{s.summary}</p><span>Explore {s.title.toLowerCase()} →</span></a></li>
+        ))}
+      </ul>
+    </div>
+  </section>
+)}
+
+<Cta />
+
+<style>
+  .two { display: grid; gap: 2.5rem; align-items: start; }
+  .story p { font-size: 1.2rem; max-width: 40rem; }
+  .side { display: grid; gap: 1.5rem; }
+  .logo-card { width: 100%; max-width: 30rem; border-radius: var(--radius); box-shadow: var(--shadow); }
+  .owner { margin: 0; max-width: 20rem; }
+  .owner img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--radius); }
+  .owner figcaption { display: grid; margin-top: 0.6rem; }
+  .owner b { font-family: var(--font-head); color: var(--ink); letter-spacing: 0.04em; }
+  .cards { display: grid; gap: 1.25rem; }
+  .cards a { display: block; height: 100%; text-decoration: none; background: #fff; border-radius: var(--radius); padding: 1.6rem 1.5rem; border-top: 4px solid var(--primary); transition: transform 0.15s, box-shadow 0.15s; }
+  .cards a:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+  .cards h3 { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+  .cards span { font-family: var(--font-head); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  @media (min-width: 48rem) { .cards { grid-template-columns: repeat(3, 1fr); gap: 1.5rem; } }
+  @media (min-width: 64rem) { .two { grid-template-columns: 1.2fr 1fr; gap: 4.5rem; } }
+</style>

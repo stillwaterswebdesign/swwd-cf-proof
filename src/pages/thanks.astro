@@ -1,0 +1,20 @@
+---
+// Where the contact form lands after a submission (Netlify Forms redirects here). Not for search results.
+import * as Look from '@look/index.ts';
+import { brand } from '../brand';
+---
+
+<Look.Layout title="Thank you" description="Your message was sent." active="contact" noindex>
+  <section class="section section--sand">
+    <div class="container thanks">
+      <p class="topper">Message sent</p>
+      <h1 class="title">Thank you</h1>
+      <p class="lead">We got your message, and we will be in touch. If it is urgent, you can also call us at <a href={brand.contact.phoneHref}>{brand.contact.phone}</a>.</p>
+      <p><a class="btn btn--primary" href="/">Back to the home page</a></p>
+    </div>
+  </section>
+</Look.Layout>
+
+<style>
+  .thanks { max-width: 40rem; }
+</style>

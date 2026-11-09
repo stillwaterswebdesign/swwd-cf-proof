@@ -1,0 +1,120 @@
+---
+// A page of photographs only, grouped under short headings. Reads brand.photoPage:
+// { title, lead, topper?, sections: [{ title?, bank } | { title?, banks: [bank, ...] } | { title?, photos: [[bank, n] | { photo, alt }] }] }
+// A section with a `bank` shows every photo found in that photo folder, so adding a photo to the folder is all it takes.
+// On desktop a click opens the photo in a lightbox (a native <dialog>): arrows or the on-screen buttons move between
+// photos, Esc / the X / a click outside the photo closes it. On a phone the photos are just photos.
+import PageHead from '../components/PageHead.astro';
+import Cta from '../components/Cta.astro';
+import { brand } from '../../../brand';
+import { img, imgSet, alt, bankPhotos } from '../../../assets';
+const page = brand.photoPage;
+const norm = (p: any) => (Array.isArray(p) ? { photo: p, alt: undefined } : p);
+const sections = page.sections.map((s: any) => ({ ...s, list: (s.banks ? s.banks.flatMap((b: string) => bankPhotos(b, 3)) : s.bank ? bankPhotos(s.bank, 3) : s.photos).map(norm) }));
+for (const s of sections) s.sets = await Promise.all(s.list.map((p: any) => imgSet(p.photo, [480, 720, 960])));
+---
+
+<PageHead title={page.title} crumb={page.topper ?? 'Gallery'} text={page.lead} />
+
+{sections.map((s: any, i: number) => (
+  <section class:list={['section', i % 2 === 0 ? 'section--white' : 'section--sand']}>
+    <div class="container">
+      {s.title && <h2 class="title sh">{s.title}</h2>}
+      <div class="grid">
+        {s.list.map((p: any, k: number) => (
+          <button class="thumb" type="button" aria-label={`View larger: ${alt(p.photo, p.alt ?? s.alt)}`}>
+            <img class="plate" src={s.sets[k].src} srcset={s.sets[k].srcset} sizes="(min-width: 64rem) 400px, (min-width: 40rem) 47vw, 100vw" width={s.sets[k].width} height={s.sets[k].height} data-full={img(p.photo)} alt={alt(p.photo, p.alt ?? s.alt)} loading="lazy" decoding="async" />
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+))}
+
+<Cta />
+
+<dialog id="lb" aria-label="Photo viewer">
+  <button class="lb-x" type="button" aria-label="Close"></button>
+  <button class="lb-nav lb-prev" type="button" aria-label="Previous photo"></button>
+  <figure id="lb-fig"></figure>
+  <button class="lb-nav lb-next" type="button" aria-label="Next photo"></button>
+  <p id="lb-count" aria-live="polite"></p>
+</dialog>
+
+<script>
+  const dlg = document.getElementById('lb') as HTMLDialogElement | null;
+  const fig = document.getElementById('lb-fig');
+  const count = document.getElementById('lb-count');
+  // the big image is created here (not in the markup) and only added once it has a src,
+  // so the page never holds an <img> with an empty src
+  const big = document.createElement('img');
+  big.id = 'lb-img';
+  const thumbs = Array.from(document.querySelectorAll<HTMLButtonElement>('.thumb'));
+  const desktop = window.matchMedia('(min-width: 48rem)');
+  let current = 0;
+
+  if (dlg && big && count && typeof dlg.showModal === 'function') {
+    const show = (n: number) => {
+      current = (n + thumbs.length) % thumbs.length;
+      const src = thumbs[current].querySelector('img')!;
+      big.src = src.dataset.full || src.currentSrc || src.src;
+      big.alt = src.alt;
+      if (!big.isConnected) fig?.append(big);
+      count.textContent = `${current + 1} of ${thumbs.length}`;
+    };
+    thumbs.forEach((b, n) => b.addEventListener('click', () => {
+      if (!desktop.matches) return;
+      show(n);
+      dlg.showModal();
+    }));
+    dlg.querySelector('.lb-x')!.addEventListener('click', () => dlg.close());
+    dlg.querySelector('.lb-prev')!.addEventListener('click', () => show(current - 1));
+    dlg.querySelector('.lb-next')!.addEventListener('click', () => show(current + 1));
+    // a click on the dark area (not the photo or a button) closes it
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+    // Esc closes by itself (native dialog); the arrows are ours
+    dlg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); show(current + 1); }
+    });
+    // never leave it open if the window is shrunk to phone width
+    desktop.addEventListener('change', () => { if (!desktop.matches && dlg.open) dlg.close(); });
+  }
+</script>
+
+<style>
+  .sh { margin-bottom: clamp(1.5rem, 3.5vw, 2.25rem); }
+  /* photos keep their own proportions (portrait stays portrait) in loose columns */
+  .grid { column-count: 1; column-gap: 0.9rem; }
+  .thumb { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; cursor: default; margin-bottom: 0.9rem; break-inside: avoid; }
+  .plate { width: 100%; height: auto; border-radius: var(--radius); }
+  @media (min-width: 40rem) { .grid { column-count: 2; } }
+  @media (min-width: 48rem) { .thumb { cursor: zoom-in; } .thumb:hover .plate { box-shadow: 0 0 0 3px var(--accent); } }
+  @media (min-width: 64rem) { .grid { column-count: 3; } }
+
+  /* ---- lightbox ---- */
+  dialog { border: 0; padding: 0; margin: 0; max-width: none; max-height: none; width: 100vw; height: 100vh; background: rgba(6, 14, 30, 0.95); color: #fff; }
+  dialog:not([open]) { display: none; }
+  dialog[open] { display: grid; place-items: center; }
+  dialog::backdrop { background: transparent; }
+  figure { margin: 0; display: grid; place-items: center; width: 100%; height: 100%; pointer-events: none; }
+  /* :global because this <img> is created by the script, so it does not carry the component's scoped-style attribute */
+  figure :global(img) { max-width: min(90vw, 1500px); max-height: 84vh; width: auto; height: auto; object-fit: contain; pointer-events: auto; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.7); }
+  .lb-x, .lb-nav { position: absolute; width: 3.25rem; height: 3.25rem; padding: 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; background: rgba(0, 0, 0, 0.35); cursor: pointer; }
+  .lb-x:hover, .lb-nav:hover { background: rgba(255, 255, 255, 0.18); }
+  .lb-x { top: 1.25rem; right: 1.25rem; }
+  .lb-x::before, .lb-x::after { content: ''; position: absolute; left: 50%; top: 50%; width: 1.25rem; height: 2px; margin: -1px 0 0 -0.625rem; background: #fff; transform: rotate(45deg); }
+  .lb-x::after { transform: rotate(-45deg); }
+  .lb-nav { top: 50%; margin-top: -1.625rem; }
+  .lb-nav::before { content: ''; position: absolute; left: 50%; top: 50%; width: 0.8rem; height: 0.8rem; border-top: 2px solid #fff; border-left: 2px solid #fff; }
+  .lb-prev { left: 1.25rem; }
+  .lb-prev::before { margin: -0.4rem 0 0 -0.2rem; transform: rotate(-45deg); }
+  .lb-next { right: 1.25rem; }
+  .lb-next::before { margin: -0.4rem 0 0 -0.6rem; transform: rotate(135deg); }
+  #lb-count { position: absolute; left: 0; right: 0; bottom: 1.25rem; margin: 0; text-align: center; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255, 255, 255, 0.75); pointer-events: none; }
+</style>
+
+<style is:global>
+  /* keep the page behind the lightbox from scrolling */
+  html:has(dialog[open]) { overflow: hidden; }
+</style>

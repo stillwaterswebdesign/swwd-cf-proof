@@ -1,0 +1,11 @@
+{
+  "name": "swwd-cf-proof",
+  "compatibility_date": "2026-11-09",
+  "workers_dev": false,
+  "routes": [{ "pattern": "proof-1.stillwaterswebdesign.site", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "force-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

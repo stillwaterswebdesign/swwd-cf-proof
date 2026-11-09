@@ -1,0 +1,20 @@
+---
+// Shown for any address that does not exist. Netlify serves this file (404.html) with a real 404 status.
+import * as Look from '@look/index.ts';
+import { brand } from '../brand';
+---
+
+<Look.Layout title="Page not found" description="That page could not be found." noindex>
+  <section class="section section--sand">
+    <div class="container missing">
+      <p class="topper">Page not found</p>
+      <h1 class="title">We could not find that page</h1>
+      <p class="lead">It may have moved or the address may be mistyped. You can start from the home page, or call us at <a href={brand.contact.phoneHref}>{brand.contact.phone}</a>.</p>
+      <p><a class="btn btn--primary" href="/">Go to the home page</a></p>
+    </div>
+  </section>
+</Look.Layout>
+
+<style>
+  .missing { max-width: 40rem; }
+</style>

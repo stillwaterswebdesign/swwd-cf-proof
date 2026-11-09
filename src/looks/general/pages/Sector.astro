@@ -1,0 +1,75 @@
+---
+// One sector page (Commercial, Residential, Municipal): the lead, a photo with the copy, what the sector covers,
+// a few photos of the work, and (when the client marks it) the customer reviews.
+import PageHead from '../components/PageHead.astro';
+import Reviews from '../components/Reviews.astro';
+import Cta from '../components/Cta.astro';
+import { brand, BASE } from '../../../brand';
+import { imgSet, alt, bankPhotos } from '../../../assets';
+const { sector } = Astro.props;
+// `stripPhotos` lets a client pick exactly which three photos show; otherwise the first three in the sector's photo folder
+// Never repeat the page's own photo: without `stripPhotos`, the default is the first three photos of the folder that are not the featured one.
+const isFeatured = (p: any) => Array.isArray(sector.image) && p[0] === sector.image[0] && p[1] === sector.image[1];
+const photos = sector.stripPhotos ?? (sector.workBank ? bankPhotos(sector.workBank, 4).filter((p: any) => !isFeatured(p)).slice(0, 3) : []);
+const mainPhoto = await imgSet(sector.image, [640, 960, 1280, 1600]);
+const photoImgs = await Promise.all(photos.map((p: any) => imgSet(p, [320, 480, 720])));
+---
+
+<PageHead title={sector.title} crumb="What we build" text={sector.lead} />
+
+<section class="section section--white">
+  <div class="container two">
+    <div class="text">
+      {sector.body.map((p: string) => <p>{p}</p>)}
+      <p class="actions"><a class="btn btn--cta" href={`${BASE}/contact/`}>{brand.quoteLabel}</a> <a class="btn btn--outline" href={brand.contact.phoneHref}>Call {brand.contact.phone}</a></p>
+    </div>
+    <img class="photo" src={mainPhoto.src} srcset={mainPhoto.srcset} sizes="(min-width: 64rem) 50vw, 100vw" width={mainPhoto.width} height={mainPhoto.height} alt={alt(sector.image, sector.imageAlt)} fetchpriority="high" decoding="async" />
+  </div>
+</section>
+
+{sector.points.length > 0 && (
+  <section class="section section--sand">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">{sector.pointsTopper ?? 'What we do'}</span>
+        <h2 class="title">{sector.pointsTitle ?? 'What we do'}</h2>
+      </div>
+      <ul class="points">
+        {sector.points.map((p: any, n: number) => <li><span class="num">{String(n + 1).padStart(2, '0')}</span><h3>{p.title}</h3><p>{p.text}</p></li>)}
+      </ul>
+    </div>
+  </section>
+)}
+
+{photos.length > 0 && (
+  <section class="section section--white">
+    <div class="container">
+      <div class="section-head">
+        <span class="topper">{brand.headings.gallery.topper}</span>
+        <h2 class="title">{sector.stripTitle ?? `${sector.title} work`}</h2>
+      </div>
+      <div class="strip">{photos.map((p: any, i: number) => <img src={photoImgs[i].src} srcset={photoImgs[i].srcset} sizes="(min-width: 64rem) 20vw, (min-width: 48rem) 30vw, 48vw" width={photoImgs[i].width} height={photoImgs[i].height} alt={alt(p)} loading="lazy" decoding="async" />)}</div>
+      {brand.photoPage && <p class="seemore"><a class="btn btn--primary" href={`${BASE}/gallery/`}>See all of our work</a></p>}
+    </div>
+  </section>
+)}
+
+{sector.reviews && brand.reviews.length > 0 && <Reviews tone="sand" />}
+<Cta />
+
+<style>
+  .two { display: grid; gap: 2.5rem; align-items: start; }
+  .text p { font-size: 1.15rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1.75rem; }
+  .photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); box-shadow: var(--shadow); }
+  .points { display: grid; gap: 1.25rem; }
+  .points li { background: #fff; border-radius: var(--radius); padding: 1.6rem 1.5rem; border-top: 4px solid var(--primary); }
+  .num { font-family: var(--font-head); font-size: 0.85rem; font-weight: 800; letter-spacing: 0.12em; color: var(--accent); }
+  .points h3 { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; margin: 0.4rem 0 0.5rem; }
+  .points p { margin: 0; }
+  .strip { display: grid; gap: 0.75rem; }
+  .strip img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius); }
+  .seemore { margin: 1.75rem 0 0; }
+  @media (min-width: 48rem) { .points { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; } .strip { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 64rem) { .two { grid-template-columns: 1.15fr 1fr; gap: 4.5rem; } .points { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); } }
+</style>

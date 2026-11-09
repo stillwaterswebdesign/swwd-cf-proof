@@ -1,0 +1,54 @@
+---
+// Every page of every client's site comes from this one route: the client decides which pages exist
+// (src/define-client.mjs allRoutes) and the look (@look, chosen in astro.config.mjs) draws them.
+import * as Look from '@look/index.ts';
+import { brand } from '../brand';
+import { allRoutes } from '../define-client.mjs';
+
+export function getStaticPaths() {
+  return allRoutes(brand).map((r) => ({ params: { slug: r.path || undefined }, props: { route: r } }));
+}
+
+const { route } = Astro.props;
+const bodies = {
+  home: Look.Home,
+  sector: (Look as any).Sector,
+  gallery: (Look as any).Gallery,
+  about: Look.About,
+  contact: Look.Contact,
+} as Record<string, any>;
+
+const service = route.key === 'service' ? brand.services.find((s: any) => s.slug === route.slug) : undefined;
+const category = route.key === 'category' ? brand.serviceCategories.find((c: any) => c.slug === route.slug) : undefined;
+const sector = route.key === 'sector' ? brand.sectors.find((s: any) => s.slug === route.slug) : undefined;
+const project = route.key === 'project' ? brand.projects.find((p: any) => p.slug === route.slug) : undefined;
+const titles: Record<string, string> = {
+  home: brand.homeTitle,
+  services: 'Services',
+  projects: 'Projects',
+  process: 'Our process',
+  gallery: brand.photoPage?.title ?? 'Gallery',
+  'how-we-work': 'How we work',
+  'service-area': 'Areas we serve',
+  about: 'About us',
+  contact: 'Contact',
+};
+const title = service?.pageTitle ?? service?.title ?? category?.page?.title ?? sector?.title ?? project?.title ?? titles[route.key];
+const city = (brand.contact.address[1] ?? '').replace(/\s*\d{5}$/, '');
+// A client can set brand.pageDescriptions = { about, contact, gallery } to word these itself; these are the safe defaults (only what the file states).
+const kinds = brand.sectors.map((s: any) => s.title.replace(/ construction$/i, '').toLowerCase());
+const kindList = kinds.length > 1 ? `${kinds.slice(0, -1).join(', ')}, and ${kinds[kinds.length - 1]}` : kinds[0] ?? '';
+const pageDescriptions: Record<string, string> = {
+  about: `Learn about ${brand.name}, a general contractor in ${city}${brand.founded ? ` since ${brand.founded.slice(0, 4)}` : ''}.`,
+  contact: `Call ${brand.contact.phone} or send a message to ${brand.name} at ${brand.contact.address.join(', ')}. Tell us about your project.`,
+  gallery: `Photos of ${kindList ? kindList + ' ' : ''}construction by ${brand.name} in ${city}.`,
+  ...(brand.pageDescriptions ?? {}),
+};
+const sectorDescription = sector ? (sector.lead.length <= 160 ? sector.lead : `${sector.summary} By ${brand.name} in ${city}.`) : undefined;
+const description = service?.blurb ?? category?.page?.lead ?? sectorDescription ?? project?.summary ?? pageDescriptions[route.key] ?? (route.key === 'home' ? brand.metaDescription : undefined);
+const Body = bodies[route.key];
+---
+
+<Look.Layout title={title} description={description} active={route.key === 'service' || route.key === 'category' ? 'services' : route.key === 'project' ? 'projects' : route.key === 'sector' ? `sector-${route.slug}` : route.key}>
+  <Body service={service} project={project} category={category} sector={sector} />
+</Look.Layout>

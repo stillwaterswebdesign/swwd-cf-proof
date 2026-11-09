@@ -1,0 +1,118 @@
+---
+// Everything in <head> for the live site: title, description, canonical address, icons, social previews, the client's palette and fonts as
+// CSS variables, and the structured data (schema.org JSON-LD) that tells Google this is a general contractor, where, and what it offers.
+//
+// Nothing here is for a preview: no "noindex" (except on the thank-you and 404 pages, which pass `noindex`), no visit beacon, no tracking.
+// The live address comes from `site` in astro.config.mjs (Astro.site), so canonical links, social previews and the structured data can never disagree.
+import { brand, BASE } from '../brand';
+import { img } from '../assets';
+
+const { title, description = brand.blurb, noindex = false } = Astro.props;
+const { colors, fonts } = brand;
+const vars = [
+  `--primary:${colors.primary}`, `--accent:${colors.accent}`, `--cta:${colors.cta}`, `--sand:${colors.sand}`,
+  `--bg:${colors.bg}`, `--ink:${colors.ink}`, `--body:${colors.body}`,
+  `--on-cta:${colors.onCta ?? colors.ink}`, `--cta-on-dark:${colors.ctaOnDark ?? colors.cta}`,
+  ...(fonts.logo ? [`--font-logo:'${fonts.logo}', ${fonts.headingFallback}`] : []),
+  `--font-head:'${fonts.heading}', ${fonts.headingFallback}`, `--font-body:'${fonts.body}', system-ui, sans-serif`,
+].join(';');
+
+const site = Astro.site!;
+const abs = (p: string) => new URL(p, site).href;
+const pathname = Astro.url.pathname;
+const isHome = pathname === '/';
+const url = abs(pathname);
+const pageTitle = isHome ? brand.homeTitle : `${title} | ${brand.name}`;
+
+// A page image for social previews: the home photo, as an absolute address.
+const heroUrl = abs(img(brand.hero.image));
+const logoUrl = abs(img(['logo', 1]));
+
+const STATES: Record<string, string> = { AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California', CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia', HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa', KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland', MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi', MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire', NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina', ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania', RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee', TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington', WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming', DC: 'District of Columbia' };
+// "2104 Silver Bluff Rd" + "Aiken, SC 29803" -> street, city, state, zip
+const [street = '', cityLine = ''] = brand.contact.address;
+const m = cityLine.match(/^(.*?),\s*([A-Z]{2})\s*(\d{5})?$/);
+const address = {
+  '@type': 'PostalAddress',
+  streetAddress: street,
+  addressLocality: m?.[1] ?? cityLine,
+  addressRegion: m?.[2] ?? '',
+  postalCode: m?.[3] ?? '',
+  addressCountry: 'US',
+};
+const digits = brand.contact.phoneHref.replace(/^tel:/, '');
+const telephone = `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5, 8)}-${digits.slice(8)}`;
+
+// The business, described only with what the business has told us (see client/brand.mjs). Deliberately NOT included: opening hours, price range,
+// ratings or reviews (none supplied; Google also ignores a business's review markup about itself), social profiles, and any license claim.
+const business: Record<string, unknown> = {
+  '@type': 'GeneralContractor',
+  '@id': abs('/#business'),
+  name: brand.name,
+  url: abs('/'),
+  logo: { '@type': 'ImageObject', url: logoUrl },
+  image: [heroUrl],
+  description: brand.blurb,
+  telephone,
+  ...(brand.contact.email ? { email: brand.contact.email } : {}),
+  address,
+  ...(brand.founded ? { foundingDate: brand.founded } : {}),
+  ...(address.addressLocality ? { areaServed: { '@type': 'City', name: address.addressLocality, ...(STATES[address.addressRegion] ? { containedInPlace: { '@type': 'State', name: STATES[address.addressRegion] } } : {}) } } : {}),
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'Construction services',
+    itemListElement: brand.sectors.map((s: any) => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: `${s.title}${/construction$/i.test(s.title) ? '' : ' construction'}`, description: s.summary, url: abs(`${BASE}/${s.slug}/`) },
+    })),
+  },
+};
+const graph: Record<string, unknown>[] = [
+  business,
+  { '@type': 'WebSite', '@id': abs('/#website'), url: abs('/'), name: brand.name, publisher: { '@id': abs('/#business') } },
+  { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: pageTitle, description, isPartOf: { '@id': abs('/#website') }, about: { '@id': abs('/#business') } },
+];
+if (!isHome && !noindex) {
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: abs('/') },
+      { '@type': 'ListItem', position: 2, name: title, item: url },
+    ],
+  });
+}
+const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(/</g, '\\u003c');
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+{noindex ? <meta name="robots" content="noindex, follow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+<link rel="canonical" href={url} />
+<meta name="theme-color" content={colors.primary} />
+
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={brand.name} />
+<meta property="og:title" content={pageTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={url} />
+<meta property="og:image" content={heroUrl} />
+<meta property="og:locale" content="en_US" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={pageTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={heroUrl} />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href={fonts.googleUrl} />
+{fonts.logoUrl && <link rel="stylesheet" href={fonts.logoUrl} />}
+<style set:html={`:root{${vars}}`}></style>
+<script type="application/ld+json" set:html={jsonLd}></script>

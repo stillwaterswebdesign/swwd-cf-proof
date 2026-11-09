@@ -1,0 +1,50 @@
+---
+import Logo from './Logo.astro';
+import { brand, footerLinks, BASE } from '../../../brand';
+---
+
+<footer class="footer">
+  <div class="container grid">
+    <div class="col about">
+      <Logo light />
+      <p>{brand.blurb}</p>
+      <ul class="contact">
+        <li><a href={brand.contact.phoneHref}>{brand.contact.phone}</a></li>
+        {brand.contact.email && <li><a href={`mailto:${brand.contact.email}`}>{brand.contact.email}</a></li>}
+        {brand.contact.address.length > 0 && <li>{brand.contact.address.join(', ')}</li>}
+      </ul>
+    </div>
+    {brand.sectors.length > 0 && (
+      <div class="col">
+        <h3>What we build</h3>
+        <ul>{brand.sectors.map((s: any) => <li><a href={`${BASE}/${s.slug}/`}>{s.title}</a></li>)}</ul>
+      </div>
+    )}
+    <div class="col">
+      <h3>Pages</h3>
+      <ul>{footerLinks.map((l: any) => <li><a href={l.href}>{l.key === 'gallery' ? (brand.photoPage?.navLabel ?? l.label) : l.label}</a></li>)}</ul>
+    </div>
+  </div>
+  <div class="legal">
+    <div class="container legal-inner">
+      <span>© {new Date().getFullYear()} {brand.name}{brand.name.endsWith('.') ? '' : '.'}</span>
+      {brand.contact.areaLine && <span>{brand.contact.areaLine}</span>}
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer { background: var(--primary); color: #aab5ca; }
+  .col { min-width: 0; }
+  .contact li { overflow-wrap: anywhere; }
+  .grid { display: grid; gap: 2.25rem; padding: 3.5rem 1rem 2.5rem; }
+  .footer h3 { color: #fff; font-size: 0.9rem; margin-bottom: 0.9rem; letter-spacing: 0.14em; text-transform: uppercase; }
+  .footer li { margin-bottom: 0.45rem; }
+  .footer a { text-decoration: none; }
+  .footer a:hover { color: #fff; text-decoration: underline; }
+  .about p { margin: 1rem 0; max-width: 24rem; }
+  .legal { border-top: 1px solid rgba(255, 255, 255, 0.14); font-size: 0.8125rem; }
+  .legal-inner { display: flex; flex-direction: column; gap: 0.4rem; padding: 1.1rem 1rem; }
+  @media (min-width: 48rem) { .grid { grid-template-columns: repeat(2, 1fr); } .legal-inner { flex-direction: row; justify-content: space-between; } }
+  @media (min-width: 64rem) { .grid { grid-template-columns: 1.6fr 1fr 1fr; } }
+</style>

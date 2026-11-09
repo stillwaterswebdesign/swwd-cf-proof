@@ -1,0 +1,33 @@
+---
+// Customers' own words, as written on Google. No star graphics (a star row would claim a rating nobody gave) and no dates.
+import { brand } from '../../../brand';
+const { tone = 'sand', title = brand.headings.reviews.title, topper = brand.headings.reviews.topper } = Astro.props;
+---
+
+<section class:list={['section', `section--${tone}`]}>
+  <div class="container">
+    <div class="section-head">
+      <span class="topper">{topper}</span>
+      <h2 class="title">{title}</h2>
+    </div>
+    <div class="grid">
+      {brand.reviews.map((r: any) => (
+        <figure class="card">
+          <blockquote>{r.text}</blockquote>
+          <figcaption><b>{r.name}</b><span>{r.source ?? 'Google review'}</span></figcaption>
+        </figure>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .grid { display: grid; gap: 1.25rem; }
+  .card { margin: 0; display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: var(--radius); padding: 1.6rem 1.5rem 1.4rem; box-shadow: var(--shadow); }
+  blockquote { margin: 0 0 1.25rem; flex: 1; font-size: 1.05rem; color: var(--ink); }
+  blockquote::before { content: '\201C'; display: block; font-family: var(--font-head); font-size: 3rem; line-height: 0.6; color: var(--accent); margin-bottom: 0.4rem; }
+  figcaption { display: grid; gap: 0.1rem; padding-top: 0.9rem; border-top: 1px solid var(--line); }
+  figcaption b { font-family: var(--font-head); font-size: 0.9rem; letter-spacing: 0.04em; color: var(--ink); }
+  figcaption span { font-size: 0.85rem; color: var(--body); }
+  @media (min-width: 48rem) { .grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; } }
+</style>

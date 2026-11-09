@@ -1,0 +1,203 @@
+---
+// The contact form. LIVE: it is a Netlify Form (data-netlify, a honeypot field, form-name), so a submission is stored by Netlify and
+// emailed to whoever is set under Netlify > Forms > Form notifications; the visitor lands on /thanks/. `look` picks the styling.
+//
+// Fields are modeled on what the builder sites we surveyed ask for (docs/contractor-site-content-research.md):
+// contact details, project type, project location, budget, timeline, how the visitor heard of the business,
+// plus consent. This client uses the short version (`form.simple`): name, phone, email, message, consent.
+import { brand } from '../brand';
+const { look = 'ridge', title = brand.quoteLabel } = Astro.props;
+const f = brand.form;
+// form.short: a client with `short: true` gets the brief version (name, phone, email, lot, start time, a few words, consent)
+const short = f.short === true;
+// "What are you planning?" lists the client's own services, or `form.types` when it has none to list.
+const types = [...(f.types ?? brand.services.map((s: { title: string }) => s.title)), 'Something else'];
+---
+
+<form
+  class={`cf cf--${look}`}
+  name="contact"
+  method="POST"
+  enctype="multipart/form-data"
+  data-netlify="true"
+  netlify-honeypot="bot-field"
+  action="/thanks/"
+  aria-label="Project inquiry"
+>
+  <input type="hidden" name="form-name" value="contact" />
+  <p class="trap" aria-hidden="true"><label>Leave this empty <input name="bot-field" tabindex="-1" autocomplete="off" /></label></p>
+
+  <h3 class="cf-title">{title}</h3>
+
+  {f.service === true ? (
+    <fieldset>
+      <div class="two">
+        <div><label for="cf-name">Your name <abbr title="required">*</abbr></label><input id="cf-name" name="name" type="text" autocomplete="name" required /></div>
+        <div><label for="cf-phone">Phone <abbr title="required">*</abbr></label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" required /></div>
+      </div>
+      <label for="cf-email">Email</label>
+      <input id="cf-email" name="email" type="email" autocomplete="email" />
+      <div class="two">
+        <div>
+          <label for="cf-type">What do you need help with?</label>
+          <select id="cf-type" name="service_type">{types.map((t: string) => <option>{t}</option>)}</select>
+        </div>
+        <div>
+          <span class="lab" id="cf-urgent">How soon?</span>
+          <div class="choices" role="radiogroup" aria-labelledby="cf-urgent">
+            <label class="choice"><input type="radio" name="urgency" value="emergency" /> It's an emergency</label>
+            <label class="choice"><input type="radio" name="urgency" value="soon" checked /> This week</label>
+            <label class="choice"><input type="radio" name="urgency" value="later" /> Not urgent</label>
+          </div>
+        </div>
+      </div>
+      <label for="cf-where">Service address</label>
+      <input id="cf-where" name="service_address" type="text" autocomplete="street-address" />
+      <label for="cf-need">What is going on?</label>
+      <textarea id="cf-need" name="message" rows="4"></textarea>
+      <label class="check"><input type="checkbox" name="consent_contact" required /> I agree to be contacted about this request by phone, text or email. <abbr title="required">*</abbr></label>
+    </fieldset>
+  ) : f.simple === true ? (
+    <fieldset>
+      <div class="two">
+        <div><label for="cf-name">Your name <abbr title="required">*</abbr></label><input id="cf-name" name="name" type="text" autocomplete="name" required /></div>
+        <div><label for="cf-phone">Phone <abbr title="required">*</abbr></label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" required /></div>
+      </div>
+      <label for="cf-email">Email <abbr title="required">*</abbr></label>
+      <input id="cf-email" name="email" type="email" autocomplete="email" required />
+      <label for="cf-need">{f.messageLabel ?? 'How can we help?'}</label>
+      <textarea id="cf-need" name="message" rows="5"></textarea>
+      <label class="check"><input type="checkbox" name="consent_contact" required /> I agree to be contacted about this message by phone, text, or email. <abbr title="required">*</abbr></label>
+    </fieldset>
+  ) : short ? (
+    <fieldset>
+      <div class="two">
+        <div><label for="cf-name">Your name <abbr title="required">*</abbr></label><input id="cf-name" name="name" type="text" autocomplete="name" required /></div>
+        <div><label for="cf-phone">Phone <abbr title="required">*</abbr></label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" required /></div>
+      </div>
+      <label for="cf-email">Email <abbr title="required">*</abbr></label>
+      <input id="cf-email" name="email" type="email" autocomplete="email" required />
+      <div class="two">
+        <div>
+          <label for="cf-land">Do you have a lot or land?</label>
+          <select id="cf-land" name="land_status">{f.land.map((o: string) => <option>{o}</option>)}</select>
+        </div>
+        <div>
+          <label for="cf-time">When would you like to start?</label>
+          <select id="cf-time" name="timeline">{f.timeline.map((o: string) => <option>{o}</option>)}</select>
+        </div>
+      </div>
+      <label for="cf-need">Tell us about the home you have in mind</label>
+      <textarea id="cf-need" name="message" rows="4"></textarea>
+      <label class="check"><input type="checkbox" name="consent_contact" required /> I agree to be contacted about this inquiry by phone, text or email. <abbr title="required">*</abbr></label>
+    </fieldset>
+  ) : (<>
+  <fieldset>
+    <legend>About you</legend>
+    <div class="two">
+      <div><label for="cf-name">Your name <abbr title="required">*</abbr></label><input id="cf-name" name="name" type="text" autocomplete="name" required /></div>
+      <div><label for="cf-phone">Phone <abbr title="required">*</abbr></label><input id="cf-phone" name="phone" type="tel" autocomplete="tel" required /></div>
+    </div>
+    <label for="cf-email">Email <abbr title="required">*</abbr></label>
+    <input id="cf-email" name="email" type="email" autocomplete="email" required />
+    <div class="two">
+      <div>
+        <span class="lab" id="cf-pref">Best way to reach you</span>
+        <div class="choices" role="radiogroup" aria-labelledby="cf-pref">
+          <label class="choice"><input type="radio" name="contact_method" value="phone" checked /> Phone call</label>
+          <label class="choice"><input type="radio" name="contact_method" value="text" /> Text</label>
+          <label class="choice"><input type="radio" name="contact_method" value="email" /> Email</label>
+        </div>
+      </div>
+      <div>
+        <label for="cf-when">Best time to reach you</label>
+        <select id="cf-when" name="best_time">
+          <option>Anytime</option><option>Morning</option><option>Afternoon</option><option>Evening</option>
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Your project</legend>
+    <div class="two">
+      <div>
+        <label for="cf-type">What are you planning? <abbr title="required">*</abbr></label>
+        <select id="cf-type" name="project_type" required>
+          <option value="">Choose one</option>
+          {types.map((t: string) => <option>{t}</option>)}
+        </select>
+      </div>
+      <div>
+        <label for="cf-land">Do you have a lot or land?</label>
+        <select id="cf-land" name="land_status">{f.land.map((o: string) => <option>{o}</option>)}</select>
+      </div>
+    </div>
+    <label for="cf-where">Project address, or the town and neighborhood</label>
+    <input id="cf-where" name="project_location" type="text" autocomplete="street-address" />
+    <div class="two">
+      <div>
+        <label for="cf-plans">Do you have plans?</label>
+        <select id="cf-plans" name="plans_status">{f.plans.map((o: string) => <option>{o}</option>)}</select>
+      </div>
+      <div>
+        <label for="cf-time">When would you like to start?</label>
+        <select id="cf-time" name="timeline">{f.timeline.map((o: string) => <option>{o}</option>)}</select>
+      </div>
+    </div>
+    <label for="cf-budget">Budget range</label>
+    <select id="cf-budget" name="budget">{f.budget.map((o: string) => <option>{o}</option>)}</select>
+    <label for="cf-need">Tell us about the project</label>
+    <textarea id="cf-need" name="message" rows="5" placeholder="Size, style, must-haves, anything we should know"></textarea>
+    <label for="cf-files">Plans, sketches or inspiration photos (optional)</label>
+    <input id="cf-files" name="attachments" type="file" multiple accept="image/*,.pdf" />
+  </fieldset>
+
+  <fieldset>
+    <legend>A little more</legend>
+    <label for="cf-heard">How did you hear about us?</label>
+    <select id="cf-heard" name="heard_from">{f.heard.map((o: string) => <option>{o}</option>)}</select>
+    <label class="check"><input type="checkbox" name="consent_contact" required /> I agree to be contacted about this inquiry by phone, text or email. <abbr title="required">*</abbr></label>
+    <label class="check"><input type="checkbox" name="consent_sms" /> Text messages are fine (message and data rates may apply; reply STOP to opt out).</label>
+  </fieldset>
+  </>)}
+
+  <button type="submit" class="cf-btn">{f.submitLabel ?? 'Send my inquiry'}</button>
+  {brand.formNote && <small class="note">{brand.formNote}</small>}
+</form>
+
+<style>
+  .cf { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; }
+  .trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.25rem; min-width: 0; }
+  legend { padding: 0; margin-bottom: 0.5rem; font-family: var(--font-head); color: var(--ink); }
+  .two { display: grid; gap: 0 1.25rem; }
+  .two > div { min-width: 0; }
+  label, .lab { display: block; margin-top: 0.85rem; color: var(--ink); }
+  abbr { text-decoration: none; color: var(--accent); }
+  input, select, textarea { width: 100%; font: inherit; color: var(--ink); }
+  input[type='file'] { padding: 0.5rem 0; }
+  .choices { display: flex; flex-wrap: wrap; gap: 0.25rem 1.1rem; margin-top: 0.35rem; }
+  .choice, .check { display: flex; align-items: flex-start; gap: 0.5rem; margin-top: 0.4rem; font-weight: 400; }
+  .choice input, .check input { width: auto; margin-top: 0.3rem; flex: none; }
+  .check { margin-top: 0.7rem; }
+  .cf-btn { cursor: pointer; justify-self: start; }
+  .note { color: var(--body); }
+  @media (min-width: 40rem) { .two { grid-template-columns: 1fr 1fr; } }
+
+  /* ---- ridge: rounded fields in a card ---- */
+  .cf--ridge .cf-title { font-size: 1.5rem; }
+  .cf--ridge legend { font-size: 1.1rem; font-weight: 700; border-bottom: 2px solid #dcdfe3; width: 100%; padding-bottom: 0.4rem; }
+  .cf--ridge label, .cf--ridge .lab { font-size: 0.8125rem; font-weight: 600; }
+  .cf--ridge input:not([type='radio']):not([type='checkbox']), .cf--ridge select, .cf--ridge textarea { border: 1px solid #cfd4d9; border-radius: var(--radius-sm); padding: 0.7rem 0.85rem; background: #fff; margin-top: 0.25rem; }
+  .cf--ridge .cf-btn { background: var(--cta); color: var(--on-cta, var(--ink)); border: 2px solid transparent; border-radius: 999px; min-height: 3rem; padding: 0 1.9rem; font-family: var(--font-head); font-weight: 700; font-size: 1rem; }
+
+  /* ---- studio: quiet underline fields ---- */
+  .cf--studio .cf-title { font-size: 1.7rem; }
+  .cf--studio legend { font-size: 1.15rem; border-bottom: 1px solid var(--line); width: 100%; padding-bottom: 0.4rem; }
+  .cf--studio label, .cf--studio .lab { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+  .cf--studio .choice, .cf--studio .check { text-transform: none; letter-spacing: 0; font-size: 0.95rem; }
+  .cf--studio input:not([type='radio']):not([type='checkbox']), .cf--studio select, .cf--studio textarea { background: transparent; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--ink) 40%, transparent); border-radius: 0; padding: 0.55rem 0; }
+  .cf--studio input:focus, .cf--studio select:focus, .cf--studio textarea:focus { outline: 0; border-bottom-color: var(--accent); }
+  .cf--studio .cf-btn { background: var(--primary); color: var(--on-primary); border: 1px solid var(--primary); border-radius: var(--radius); min-height: 3.1rem; padding: 0 1.75rem; font-family: var(--font-body); font-weight: 600; font-size: 0.8125rem; letter-spacing: 0.1em; text-transform: uppercase; }
+</style>

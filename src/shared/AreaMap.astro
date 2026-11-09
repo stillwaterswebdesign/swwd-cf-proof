@@ -1,0 +1,47 @@
+---
+// A simple, generated "service area" illustration: the business's own town in the middle and its listed
+// towns around it. Not a real map (no geography is implied) and labeled as illustrative. Built from the
+// client's data so it can never show another business's towns.
+import { brand } from '../brand';
+const hq = (brand.contact.address.at(-1) ?? '').replace(/\s*\d{5}(-\d{4})?\s*$/, '').trim() || brand.shortName;
+const hqTown = hq.split(',')[0].trim().toLowerCase();
+const towns = brand.serviceArea.filter((t: string) => t.trim().toLowerCase() !== hqTown).slice(0, 8);
+const cx = 450, cy = 300, rx = 330, ry = 205;
+const pins = towns.map((name: string, i: number) => {
+  const a = (-90 + (360 / towns.length) * i + (towns.length % 2 ? 12 : 22)) * (Math.PI / 180);
+  const x = Math.round(cx + rx * Math.cos(a)), y = Math.round(cy + ry * Math.sin(a));
+  return { name, x, y };
+});
+---
+
+<figure class="area-map">
+  <svg viewBox="0 0 900 600" role="img" aria-label={`Illustration of the towns ${brand.shortName} serves`}>
+    <rect width="900" height="600" fill="color-mix(in srgb, var(--primary) 9%, #fff)" />
+    <g fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round" opacity="0.9">
+      <path d="M-20 430C180 380 300 470 470 400S760 330 920 380" />
+      <path d="M210 -20C250 160 190 260 290 360S480 560 520 620" />
+      <path d="M700 -20C660 140 730 230 640 330S600 520 650 620" />
+    </g>
+    <g fill="none" stroke="var(--primary)" stroke-width="2" stroke-dasharray="4 8" opacity="0.35">
+      {pins.map((p: { x: number; y: number }) => <line x1={cx} y1={cy} x2={p.x} y2={p.y} />)}
+    </g>
+    {pins.map((p: { name: string; x: number; y: number }) => (
+      <g transform={`translate(${p.x} ${p.y})`}>
+        <circle r="9" fill="var(--accent)" stroke="#fff" stroke-width="3" />
+        <text y="32" text-anchor="middle" font-size="22" font-weight="600" fill="var(--ink)" stroke="#fff" stroke-width="5" paint-order="stroke" font-family="var(--font-body)">{p.name}</text>
+      </g>
+    ))}
+    <g transform={`translate(${cx} ${cy})`}>
+      <circle r="17" fill="var(--primary)" stroke="#fff" stroke-width="4" />
+      <circle r="6" fill="#fff" />
+      <text y="46" text-anchor="middle" font-size="26" font-weight="700" fill="var(--ink)" stroke="#fff" stroke-width="6" paint-order="stroke" font-family="var(--font-body)">{hq}</text>
+    </g>
+  </svg>
+  <figcaption>Illustration only, not to scale.</figcaption>
+</figure>
+
+<style>
+  .area-map { margin: 0; }
+  .area-map svg { display: block; width: 100%; height: auto; }
+  .area-map figcaption { font-size: 0.75rem; color: var(--body); padding-top: 0.35rem; opacity: 0.8; }
+</style>

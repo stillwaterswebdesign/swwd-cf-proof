@@ -1,0 +1,44 @@
+---
+import PageHead from '../components/PageHead.astro';
+import ContactForm from '../../../shared/ContactForm.astro';
+import { brand } from '../../../brand';
+const h = brand.headings.contact;
+---
+
+<PageHead title="Contact us" crumb={h.topper} text={brand.intro.contact} />
+
+<section class="section section--white">
+  <div class="container wrap">
+    <div class="info">
+      <h2 class="title">{h.title}</h2>
+      {h.lead && <p class="lead">{h.lead}</p>}
+      <ul class="cards">
+        <li><b>Call</b><a href={brand.contact.phoneHref}>{brand.contact.phone}</a></li>
+        {brand.contact.email && <li><b>Email</b><a href={`mailto:${brand.contact.email}`}>{brand.contact.email}</a></li>}
+        {brand.contact.address.length > 0 && <li><b>Address</b><span>{brand.contact.address.join(', ')}</span></li>}
+      </ul>
+      {brand.contact.hours.length > 0 && (<>
+        <h3>Hours</h3>
+        <dl class="hours">
+          {brand.contact.hours.map(([d, t]: string[]) => (<><dt>{d}</dt><dd>{t}</dd></>))}
+        </dl>
+      </>)}
+      {brand.contact.promise && <p class="promise">{brand.contact.promise}</p>}
+    </div>
+    <div class="formcard"><ContactForm look="ridge" title={brand.hero.formTitle} /></div>
+  </div>
+</section>
+
+<style>
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 3rem; }
+  .cards { display: grid; gap: 0.75rem; margin: 1.5rem 0 2rem; }
+  .cards li { display: grid; background: var(--bg); border-left: 5px solid var(--accent); border-radius: var(--radius); padding: 0.9rem 1.1rem; }
+  .cards b { font-family: var(--font-head); color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.14em; }
+  .cards a, .cards span { text-decoration: none; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; font-size: 1.15rem; }
+  .hours { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 1.25rem; margin: 0; }
+  .hours dt { font-weight: 600; color: var(--ink); }
+  .hours dd { margin: 0; }
+  .promise { margin-top: 1.5rem; font-weight: 600; color: var(--ink); }
+  .formcard { background: var(--bg); border: 1px solid var(--line); border-top: 5px solid var(--primary); border-radius: var(--radius); padding: 2rem 1.5rem; }
+  @media (min-width: 64rem) { .wrap { grid-template-columns: 0.8fr 1.2fr; gap: 4.5rem; } .formcard { padding: 2.5rem; } }
+</style>

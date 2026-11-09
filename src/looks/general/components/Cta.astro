@@ -1,0 +1,27 @@
+---
+import { brand, BASE } from '../../../brand';
+const { title = brand.cta.title, text = brand.cta.text } = Astro.props;
+---
+
+<section class="cta">
+  <div class="container inner">
+    <div>
+      <h2>{title}</h2>
+      <p>{text}</p>
+    </div>
+    <div class="actions">
+      <a class="btn btn--call" href={brand.contact.phoneHref}>Call {brand.contact.phone}</a>
+      <a class="btn btn--outline-light" href={`${BASE}/contact/`}>{brand.quoteLabel}</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .cta { background: var(--primary); color: #cfd6e4; padding: clamp(2.75rem, 6vw, 4rem) 1rem; border-top: 5px solid var(--cta-on-dark); }
+  .inner { display: grid; gap: 1.5rem; align-items: center; }
+  h2 { color: #fff; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; margin-bottom: 0.4rem; }
+  p { margin: 0; max-width: 38rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+  .btn--call { background: #fff; color: var(--primary); }
+  @media (min-width: 64rem) { .inner { grid-template-columns: 1fr auto; gap: 3rem; } }
+</style>
